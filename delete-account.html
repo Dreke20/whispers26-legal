@@ -191,13 +191,14 @@
       const refId = 'DEL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
       try {
-        const endpoint = (window.location.hostname === 'whispersandwarnings.fly.dev' || window.location.hostname === 'localhost')
-          ? '/api/account/delete-request'
-          : 'https://whispersandwarnings.fly.dev/api/account/delete-request';
+        const endpoint = 'https://ulycleyqgvcejboqpqfb.supabase.co/functions/v1/api/api/account/delete-request';
 
         const resp = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVseWNsZXlxZ3ZjZWpib3FwcWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzMzc2MjksImV4cCI6MjEwOTkxMzYyOX0.NKoY3xx-rHcutux1UpBAec0KfstDaVRIbd86e8ONtho'
+          },
           body: JSON.stringify({ email, role, reason, refId })
         });
 
