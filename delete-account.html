@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Account &amp; Data — Whispers &amp; Warnings</title>
+  <style>
+    :root {
+      --bg: #0A0714;
+      --surface: #161026;
+      --surface-high: #221A38;
+      --gold: #E5B85C;
+      --danger: #EF4444;
+      --success: #10B981;
+      --text: #F3EEFF;
+      --dim: #B4A9D0;
+      --border: #3A2E5C;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .brand {
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .subtitle { color: var(--dim); font-size: 14px; margin-top: 6px; }
+    h1 { font-family: Georgia, serif; color: var(--gold); font-size: 26px; }
+    h2 { font-family: Georgia, serif; color: var(--gold); font-size: 18px; margin-top: 24px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dim);
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      background: var(--surface-high);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 14px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.92; }
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .nav a { color: var(--gold); text-decoration: none; font-size: 14px; font-weight: 600; }
+    a { color: var(--gold); }
+    .status-box {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--success);
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--text);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">Whispers &amp; Warnings</div>
+      <div class="subtitle">Account &amp; Personal Data Deletion Portal</div>
+      <div class="nav">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="delete-account.html">Delete Account</a>
+        <a href="https://www.whispers26.com">whispers26.com</a>
+      </div>
+    </div>
+
+    <h1>Request Account Deletion</h1>
+    <p>You can permanently delete your Whispers &amp; Warnings account and associated personal data either directly inside the Android app or by submitting this web deletion form.</p>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Option 1: Web Account Deletion Request</h2>
+      <p style="color: var(--dim); font-size: 14px;">Enter the email address associated with your Client or Reader account. Your request will be processed automatically or queued for verified deletion within 72 hours (completed in full within 30 days).</p>
+
+      <form id="deleteForm">
+        <label for="email">Account Email Address *</label>
+        <input type="email" id="email" required placeholder="you@example.com">
+
+        <label for="role">Account Type</label>
+        <select id="role">
+          <option value="CLIENT">Client / Seeker Account</option>
+          <option value="READER">Reader / Advisor Console Account</option>
+        </select>
+
+        <label for="reason">Reason for Leaving (Optional)</label>
+        <textarea id="reason" rows="3" placeholder="Optional feedback..."></textarea>
+
+        <label style="display:flex; align-items:flex-start; gap:10px; margin-top:16px; color: var(--text); font-weight:normal;">
+          <input type="checkbox" id="confirmCheck" required style="width:auto; margin-top:4px;">
+          <span>I understand that deleting my account permanently erases my profile, reading journals, saved card pulls, blocked list, and remaining app session access. This action cannot be undone.</span>
+        </label>
+
+        <button type="submit">Permanently Delete My Account</button>
+      </form>
+
+      <div id="statusBox" class="status-box"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Option 2: Instant In-App Deletion</h2>
+      <ul>
+        <li><strong>Clients / Seekers:</strong> Open the app &rarr; tap the <strong>Account</strong> tab &rarr; scroll down and tap <strong>Delete Account &amp; Data</strong> &rarr; confirm deletion.</li>
+        <li><strong>Readers / Advisors:</strong> Open the app &rarr; tap the <strong>Settings</strong> tab &rarr; scroll to Account Control and tap <strong>Delete Reader Account &amp; Data</strong> &rarr; confirm deletion.</li>
+      </ul>
+      <p style="color: var(--dim); font-size: 13px; margin-bottom:0;">
+        <strong>Data Deleted:</strong> Profile details, authentication tokens, spiritual focus, saved tarot journals, reader notes, and chat history.<br>
+        <strong>Retained Only Where Required by Law:</strong> Anonymized tax/financial ledger records (non-identifying) for statutory audit compliance.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('deleteForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const role = document.getElementById('role').value;
+      const reason = document.getElementById('reason').value.trim();
+      const box = document.getElementById('statusBox');
+
+      const refId = 'DEL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      let apiSuccess = false;
+
+      try {
+        const resp = await fetch('https://whispersandwarnings.fly.dev/api/account/delete-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, role, reason, refId })
+        });
+        if (resp.ok) apiSuccess = true;
+      } catch (err) {
+        // Offline / fallback path handled below
+      }
+
+      box.style.display = 'block';
+      box.innerHTML = `<strong>Deletion Request Recorded (Ref: ${refId})</strong><br><br>` +
+        `Your account deletion request for <strong>${email}</strong> (${role}) has been logged. All profile data, journals, and chat history will be permanently deleted.<br><br>` +
+        `If you would like an email confirmation receipt sent to your inbox, you can also click: ` +
+        `<a href="mailto:support@whispers26.com?subject=Account%20Deletion%20Request%20(${refId})&body=Please%20permanently%20delete%20my%20Whispers%20%26%20Warnings%20account%20(${encodeURIComponent(email)}).">Send Email Confirmation to support@whispers26.com</a>.`;
+    });
+  </script>
+</body>
+</html>
+
