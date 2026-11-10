@@ -92,30 +92,37 @@
     <h2>1. Information We Collect</h2>
     <ul>
       <li><strong>Account &amp; Profile Details:</strong> Email address (for authentication only), chosen screen name or stage name, optional zodiac sign, spiritual focus/specialties, and role (Client or Reader).</li>
-      <li><strong>Session &amp; Communication Data:</strong> Text chat messages sent during live sessions, $5 Sacred Card Pull questions and interpretations, reading duration timestamps, and client/reader safety reports. Audio and video streams are transmitted via peer-to-peer WebRTC and are not recorded.</li>
-      <li><strong>Wallet &amp; Transaction Metadata:</strong> Credit balances, minute-by-minute session charges, refund records, and payout calculations. Credit card and payment details are processed exclusively by Wix / Stripe on <code>whispers26.com</code> and are never stored by the mobile app.</li>
+      <li><strong>Session &amp; Communication Data:</strong> Text chat messages sent during live sessions, reading duration timestamps, and client/reader safety reports. Audio and video streams are transmitted via encrypted peer-to-peer WebRTC channels and are never recorded.</li>
+      <li><strong>Live Reading Balance &amp; Transaction Metadata:</strong> Prepaid live reading balance, minute-by-minute session charges, refund records, and reader payout calculations. Credit card and financial payment transactions are conducted exclusively on <code>whispers26.com</code> and are never handled, processed, or stored by the mobile app.</li>
       <li><strong>Device Permissions:</strong> Microphone (voice/video readings), Camera (optional video readings), and Notifications (incoming call alerts and reader online alerts).</li>
     </ul>
 
     <h2>2. How We Use Information</h2>
     <ul>
-      <li>To authenticate accounts, route live reading requests, and enforce per-minute billing and automatic connection-drop refunds.</li>
-      <li>To power AI-assisted tarot card interpretations for the $5 Sacred Card Pull mini-game.</li>
+      <li>To authenticate accounts, route live 1:1 human reading requests, and enforce per-minute billing and automatic connection-drop refunds.</li>
       <li>To enforce Trust &amp; Safety through user blocking, moderation reporting, and fraud prevention.</li>
     </ul>
 
-    <h2>3. Data Sharing &amp; Third-Party Services</h2>
-    <p>We do not sell your personal information. Data is shared strictly with essential infrastructure providers to operate the platform:</p>
+    <h2>3. Data Storage &amp; Infrastructure Providers</h2>
+    <p>We do not sell your personal information. Platform data is hosted and processed strictly with trusted infrastructure providers:</p>
     <ul>
-      <li><strong>Supabase:</strong> Authentication and encrypted PostgreSQL wallet ledger.</li>
-      <li><strong>Firebase / Google Play Services:</strong> Push notification delivery (FCM tokens).</li>
-      <li><strong>Wix Payments:</strong> Web credit checkout processing on <code>whispers26.com</code>.</li>
+      <li><strong>Fly.io:</strong> Backend server and real-time WebRTC signaling runtime. All application data in transit and at rest is securely stored and processed on Fly.io servers.</li>
+      <li><strong>Supabase:</strong> Encrypted authentication and PostgreSQL database storage for account profiles and reading balance records.</li>
+      <li><strong>Google Firebase Cloud Messaging (FCM):</strong> Used solely and exclusively to deliver push notifications (e.g. incoming live reading call alerts and reader availability alerts). FCM is not used for any other purpose.</li>
     </ul>
 
-    <h2>4. User Safety: Reporting &amp; Blocking</h2>
+    <h2>4. No Analytics, No Advertising IDs, and No Ads</h2>
+    <p>Whispers &amp; Warnings is strictly private and non-commercialized in its data practices:</p>
+    <ul>
+      <li>The app <strong>does not use analytics</strong> of any kind (Firebase Analytics and measurement libraries are completely removed).</li>
+      <li>The app <strong>does not collect, read, or transmit Advertising IDs</strong> (all Google Advertising ID / AD_ID and Android AdServices permissions are explicitly stripped).</li>
+      <li>The app <strong>does not show advertisements</strong> and does not sell or share user data with advertising networks or data brokers.</li>
+    </ul>
+
+    <h2>5. User Safety: Reporting &amp; Blocking</h2>
     <p>Users and readers can report inappropriate behavior or block another participant directly from any active chat/session screen or reader profile. Blocking immediately terminates active communication and prevents future contact.</p>
 
-    <h2>5. Account Deletion &amp; Data Retention</h2>
+    <h2>6. Account Deletion &amp; Data Retention</h2>
     <p>You may delete your account and personal data at any time:</p>
     <ul>
       <li><strong>In the App:</strong> Go to <em>Account &rarr; Delete Account &amp; Data</em> (Clients) or <em>Settings &rarr; Delete Reader Account &amp; Data</em> (Readers).</li>
@@ -123,10 +130,10 @@
     </ul>
     <p>Upon deletion, your profile, credentials, journal entries, blocked lists, and personal chat history are permanently purged within 30 days. Minimal anonymized ledger records may be retained strictly where required for financial and tax compliance.</p>
 
-    <h2>6. Age Restriction (18+)</h2>
+    <h2>7. Age Restriction (18+)</h2>
     <p>Whispers &amp; Warnings is strictly for adults aged 18 and older. We do not knowingly collect personal information from minors under 18.</p>
 
-    <h2>7. Contact Us</h2>
+    <h2>8. Contact Us</h2>
     <p>For privacy inquiries or manual deletion assistance, email us at <a href="mailto:support@whispers26.com">support@whispers26.com</a> or visit <a href="https://www.whispers26.com">https://www.whispers26.com</a>.</p>
   </div>
 </body>

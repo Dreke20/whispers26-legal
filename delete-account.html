@@ -105,6 +105,10 @@
       color: var(--text);
       font-size: 14px;
     }
+    .status-error {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.12);
+    }
   </style>
 </head>
 <body>
@@ -171,26 +175,59 @@
       const role = document.getElementById('role').value;
       const reason = document.getElementById('reason').value.trim();
       const box = document.getElementById('statusBox');
+      const submitBtn = document.querySelector('#deleteForm button[type="submit"]');
+
+      if (!email || !email.includes('@')) {
+        box.className = 'status-box status-error';
+        box.style.display = 'block';
+        box.innerHTML = '<strong>Error:</strong> Please enter a valid email address.';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting Request...';
+      box.style.display = 'none';
 
       const refId = 'DEL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      let apiSuccess = false;
 
       try {
-        const resp = await fetch('https://whispersandwarnings.fly.dev/api/account/delete-request', {
+        const endpoint = (window.location.hostname === 'whispersandwarnings.fly.dev' || window.location.hostname === 'localhost')
+          ? '/api/account/delete-request'
+          : 'https://whispersandwarnings.fly.dev/api/account/delete-request';
+
+        const resp = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, role, reason, refId })
         });
-        if (resp.ok) apiSuccess = true;
-      } catch (err) {
-        // Offline / fallback path handled below
-      }
 
-      box.style.display = 'block';
-      box.innerHTML = `<strong>Deletion Request Recorded (Ref: ${refId})</strong><br><br>` +
-        `Your account deletion request for <strong>${email}</strong> (${role}) has been logged. All profile data, journals, and chat history will be permanently deleted.<br><br>` +
-        `If you would like an email confirmation receipt sent to your inbox, you can also click: ` +
-        `<a href="mailto:support@whispers26.com?subject=Account%20Deletion%20Request%20(${refId})&body=Please%20permanently%20delete%20my%20Whispers%20%26%20Warnings%20account%20(${encodeURIComponent(email)}).">Send Email Confirmation to support@whispers26.com</a>.`;
+        const data = await resp.json().catch(() => ({}));
+
+        if (resp.ok && data.ok) {
+          box.className = 'status-box';
+          box.style.display = 'block';
+          box.innerHTML = `<strong>Account Deletion Request Confirmed (Ref: ${refId})</strong><br><br>` +
+            `Your account deletion request for <strong>${email}</strong> (${role}) has been confirmed and logged in our compliance database.<br><br>` +
+            `All profile data, reading journals, preferences, and personal chat history are queued for permanent deletion within 30 days pursuant to privacy regulations.<br><br>` +
+            `Need assistance or have questions? Email our Data Protection Officer at <a href="mailto:support@whispers26.com?subject=Account%20Deletion%20(${refId})">support@whispers26.com</a>.`;
+          document.getElementById('deleteForm').reset();
+          submitBtn.textContent = 'Deletion Request Submitted';
+        } else {
+          box.className = 'status-box status-error';
+          box.style.display = 'block';
+          box.innerHTML = `<strong>Error Processing Request:</strong> ${data.error || 'The server could not process your deletion request. Please try again or email support@whispers26.com.'}`;
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Permanently Delete My Account';
+        }
+      } catch (err) {
+        box.className = 'status-box status-error';
+        box.style.display = 'block';
+        box.innerHTML = `<strong>Network Error:</strong> Unable to connect to the deletion server. ` +
+          `Please check your internet connection or email your request directly to ` +
+          `<a href="mailto:support@whispers26.com?subject=Account%20Deletion%20Request%20(${refId})&body=Please%20permanently%20delete%20my%20Whispers%20%26%20Warnings%20account%20(${encodeURIComponent(email)}).">support@whispers26.com</a> (Reference: ${refId}).`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Permanently Delete My Account';
+      }
     });
   </script>
 </body>
