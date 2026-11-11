@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Payouts Portal — Whispers &amp; Warnings</title>
+  <title>Admin Payouts &amp; Readers — Whispers &amp; Warnings</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
   <style>
     :root {
@@ -26,7 +26,7 @@
       line-height: 1.6;
     }
     .container {
-      max-width: 1040px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 32px 20px;
     }
@@ -158,6 +158,41 @@
       margin-bottom: 16px;
       display: none;
     }
+    .tabs { flex-wrap: wrap; }
+    .section-note {
+      color: var(--dim);
+      font-size: 13px;
+      margin: 4px 0 0;
+    }
+    .inline-label {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    input.rate-input {
+      width: 96px;
+      padding: 6px 8px;
+      margin: 0;
+    }
+    .reader-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .reader-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+    .clamp {
+      max-width: 280px;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      font-size: 13px;
+    }
+    .dim-cell { font-size: 12px; color: var(--dim); }
+    .email-cell { font-size: 12px; color: var(--dim); white-space: nowrap; }
+    .gold-cell { color: var(--gold); font-weight: bold; }
+    .badge-pending { background: rgba(229, 184, 92, 0.15); color: var(--gold); border: 1px solid var(--gold); }
+    .badge-denied { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-muted { background: rgba(180, 169, 208, 0.12); color: var(--dim); border: 1px solid var(--border); }
+    button:disabled, input:disabled { opacity: 0.55; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -165,7 +200,7 @@
     <div class="header">
       <div>
         <div class="brand">Whispers &amp; Warnings</div>
-        <div style="color: var(--dim); font-size: 13px;">Stripe Connect Admin Payouts Console</div>
+        <div style="color: var(--dim); font-size: 13px;">Admin Console — Payouts &amp; Reader Applications</div>
       </div>
       <div id="authBar" style="display:none; align-items:center; gap:12px;">
         <span id="userEmail" style="color:var(--gold); font-size:14px; font-weight:600;"></span>
@@ -176,7 +211,7 @@
     <!-- Login Card -->
     <div id="loginCard" class="card" style="max-width: 440px; margin: 40px auto;">
       <h2 style="margin-top:0; color:var(--gold); font-family:Georgia, serif; font-size:20px;">Staff / Admin Sign In</h2>
-      <p style="color:var(--dim); font-size:13px;">Sign in with your authorized admin account to review payout approval queues and audit logs.</p>
+      <p style="color:var(--dim); font-size:13px;">Sign in with your authorized admin account to review reader applications, payout approval queues, and audit logs.</p>
       <form id="loginForm">
         <label for="email">Admin Email</label>
         <input type="email" id="email" required placeholder="you@example.com">
@@ -194,8 +229,9 @@
       <div id="statusAlert" class="status-msg"></div>
 
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('queue')">Approval Queue</button>
-        <button class="tab-btn" onclick="switchTab('history')">Payout History &amp; Audits</button>
+        <button class="tab-btn active" type="button" onclick="switchTab('queue', this)">Approval Queue</button>
+        <button class="tab-btn" type="button" onclick="switchTab('history', this)">Payout History &amp; Audits</button>
+        <button class="tab-btn" type="button" onclick="switchTab('readers', this)">Reader Applications</button>
       </div>
 
       <!-- Queue Tab -->
@@ -271,13 +307,71 @@
           </table>
         </div>
       </div>
+
+      <!-- Reader applications tab -->
+      <div id="readersTab" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h3 style="margin:0; font-family:Georgia, serif; color:var(--gold);">Pending Reader Applications</h3>
+            <p class="section-note">Applications that are not yet approved or denied. Adjust the rate before approving, or leave it to keep the requested rate.</p>
+          </div>
+          <button class="btn-primary" type="button" onclick="loadReaderAdmin()" style="padding:6px 14px; font-size:13px;">Refresh</button>
+        </div>
+        <div class="card" style="padding:0; overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Requested Rate</th>
+                <th>Modalities</th>
+                <th>Experience</th>
+                <th>Specialties</th>
+                <th>Agreement</th>
+                <th>Applied</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pendingBody">
+              <tr><td colspan="9" style="text-align:center; color:var(--dim); padding:24px;">Open this tab to load applications.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin:8px 0 12px;">
+          <h3 style="margin:0; font-family:Georgia, serif; color:var(--gold);">All Readers</h3>
+          <p class="section-note">Approved readers are live on the public roster. Pending and denied readers are not.</p>
+        </div>
+        <div class="card" style="padding:0; overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Rate</th>
+                <th>Application</th>
+                <th>Presence</th>
+                <th>Agreement</th>
+                <th>Applied</th>
+                <th>Denial Reason</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="readersBody">
+              <tr><td colspan="9" style="text-align:center; color:var(--dim); padding:24px;">Open this tab to load readers.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
     const SUPABASE_URL = "https://ulycleyqgvcejboqpqfb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVseWNsZXlxZ3ZjZWpib3FwcWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzMzc2MjksImV4cCI6MjEwOTkxMzYyOX0.NKoY3xx-rHcutux1UpBAec0KfstDaVRIbd86e8ONtho";
-    const API_BASE = "https://ulycleyqgvcejboqpqfb.supabase.co/functions/v1/api/api/admin/payouts";
+    // The Edge Function is named "api" and its routes start with /api, so the
+    // public path contains /api/api/. Payout and reader calls share this root.
+    const API_ROOT = "https://ulycleyqgvcejboqpqfb.supabase.co/functions/v1/api/api";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let currentSession = null;
@@ -325,19 +419,15 @@
       updateUI();
     }
 
-    function switchTab(tab) {
+    function switchTab(tab, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      if (tab === 'queue') {
-        event.target.classList.add('active');
-        document.getElementById('queueTab').style.display = 'block';
-        document.getElementById('historyTab').style.display = 'none';
-        loadQueue();
-      } else {
-        event.target.classList.add('active');
-        document.getElementById('queueTab').style.display = 'none';
-        document.getElementById('historyTab').style.display = 'block';
-        loadHistory();
-      }
+      (btn || event.target).classList.add('active');
+      document.getElementById('queueTab').style.display = tab === 'queue' ? 'block' : 'none';
+      document.getElementById('historyTab').style.display = tab === 'history' ? 'block' : 'none';
+      document.getElementById('readersTab').style.display = tab === 'readers' ? 'block' : 'none';
+      if (tab === 'queue') loadQueue();
+      else if (tab === 'history') loadHistory();
+      else loadReaderAdmin();
     }
 
     async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -347,14 +437,23 @@
         'Authorization': `Bearer ${currentSession.access_token}`,
         'Content-Type': 'application/json'
       };
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined
-      });
-      return await res.json();
+      try {
+        const res = await fetch(`${API_ROOT}${endpoint}`, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : undefined
+        });
+        const data = await res.json().catch(() => null);
+        if (!data || typeof data !== 'object') {
+          return { ok: false, error: `Request failed (${res.status})` };
+        }
+        return data;
+      } catch (err) {
+        return { ok: false, error: err && err.message ? err.message : 'Network error' };
+      }
     }
 
+    let statusTimer = null;
     function showStatus(msg, isError = false) {
       const box = document.getElementById('statusAlert');
       box.style.display = 'block';
@@ -362,7 +461,8 @@
       box.style.border = `1px solid ${isError ? 'var(--danger)' : 'var(--success)'}`;
       box.style.color = isError ? 'var(--danger)' : 'var(--success)';
       box.textContent = msg;
-      setTimeout(() => { box.style.display = 'none'; }, 5000);
+      if (statusTimer) clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => { box.style.display = 'none'; }, 5000);
     }
 
     async function loadQueue() {
@@ -378,7 +478,7 @@
       loadingTr.appendChild(loadingTd);
       tbody.appendChild(loadingTr);
 
-      const data = await apiRequest('/queue');
+      const data = await apiRequest('/admin/payouts/queue');
       tbody.innerHTML = '';
 
       if (!data || !data.ok) {
@@ -505,7 +605,7 @@
 
     async function approveOne(id) {
       if (!confirm(`Approve earning #${id} for payout?`)) return;
-      const res = await apiRequest('/approve', 'POST', { ids: [id] });
+      const res = await apiRequest('/admin/payouts/approve', 'POST', { ids: [id] });
       if (res?.ok) {
         showStatus(`Earning #${id} approved successfully.`);
         loadQueue();
@@ -517,7 +617,7 @@
     async function rejectOne(id) {
       const reason = prompt(`Enter rejection reason for earning #${id}:`);
       if (!reason) return;
-      const res = await apiRequest('/reject', 'POST', { ids: [id], reason });
+      const res = await apiRequest('/admin/payouts/reject', 'POST', { ids: [id], reason });
       if (res?.ok) {
         showStatus(`Earning #${id} rejected.`);
         loadQueue();
@@ -537,7 +637,7 @@
         return;
       }
       if (!confirm(`Approve ${checked.length} selected earnings for payout?`)) return;
-      const res = await apiRequest('/approve', 'POST', { ids: checked });
+      const res = await apiRequest('/admin/payouts/approve', 'POST', { ids: checked });
       if (res?.ok) {
         showStatus(`Approved ${res.approvedIds?.length || checked.length} earnings.`);
         loadQueue();
@@ -549,7 +649,7 @@
     async function loadHistory() {
       const historyBody = document.getElementById('historyBody');
       const auditBody = document.getElementById('auditBody');
-      const data = await apiRequest('/history');
+      const data = await apiRequest('/admin/payouts/history');
       if (!data || !data.ok) return;
 
       historyBody.innerHTML = '';
@@ -662,6 +762,288 @@
 
           auditBody.appendChild(tr);
         });
+      }
+    }
+
+    function readerProfile(reader) {
+      const profile = reader && reader.profiles;
+      if (Array.isArray(profile)) return profile[0] || {};
+      return profile || {};
+    }
+
+    function formatRate(cents) {
+      const amount = Number(cents);
+      if (!Number.isFinite(amount)) return '—';
+      return `$${(amount / 100).toFixed(2)}/min`;
+    }
+
+    function dollarsToCents(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return null;
+      const dollars = Number(raw);
+      if (!Number.isFinite(dollars)) return NaN;
+      return Math.round(dollars * 100);
+    }
+
+    function formatList(value) {
+      if (value == null || value === '') return '—';
+      if (Array.isArray(value)) {
+        const parts = value.map(item => String(item).trim()).filter(Boolean);
+        return parts.length ? parts.join(', ') : '—';
+      }
+      if (typeof value === 'string') return value.trim() || '—';
+      try {
+        return JSON.stringify(value);
+      } catch (err) {
+        return '—';
+      }
+    }
+
+    function formatAgreement(value) {
+      if (value === true || value === 'true' || value === 1) return 'Agreed';
+      if (value === false || value === 'false' || value === 0) return 'Not agreed';
+      return 'Not recorded';
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleDateString();
+    }
+
+    function applicationStatus(reader) {
+      if (reader.denied) return { label: 'Denied', className: 'badge badge-denied' };
+      if (reader.approved) return { label: 'Approved', className: 'badge badge-approved' };
+      return { label: 'Pending', className: 'badge badge-pending' };
+    }
+
+    function presenceBadge(status) {
+      const label = status ? String(status) : '—';
+      const upper = label.toUpperCase();
+      if (upper === 'AVAILABLE') return { label, className: 'badge badge-approved' };
+      if (upper === 'AWAY') return { label, className: 'badge badge-pending' };
+      return { label, className: 'badge badge-muted' };
+    }
+
+    function setMessageRow(tbody, colspan, message, isError) {
+      tbody.replaceChildren();
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = colspan;
+      td.style.textAlign = 'center';
+      td.style.color = isError ? 'var(--danger)' : 'var(--dim)';
+      td.style.padding = '24px';
+      td.textContent = message;
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+
+    function appendCell(tr, text, className) {
+      const td = document.createElement('td');
+      if (className) td.className = className;
+      td.textContent = text == null || text === '' ? '—' : String(text);
+      tr.appendChild(td);
+      return td;
+    }
+
+    function appendBadge(tr, badge) {
+      const td = document.createElement('td');
+      const span = document.createElement('span');
+      span.className = badge.className;
+      span.textContent = badge.label;
+      td.appendChild(span);
+      tr.appendChild(td);
+    }
+
+    function setRowBusy(button, busy) {
+      const row = button && button.closest('tr');
+      if (!row) return;
+      row.querySelectorAll('button, input').forEach(el => { el.disabled = busy; });
+    }
+
+    function rateInput(reader, labelText) {
+      const label = document.createElement('label');
+      label.className = 'inline-label';
+      label.append(labelText);
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'rate-input';
+      input.min = '1';
+      input.max = '100';
+      input.step = '0.01';
+      input.autocomplete = 'off';
+      const cents = Number(reader.rate_cents);
+      input.value = Number.isFinite(cents) ? (cents / 100).toFixed(2) : '';
+      const name = reader.name || readerProfile(reader).display_name || 'reader';
+      input.setAttribute('aria-label', `${labelText} for ${name}`);
+      label.appendChild(input);
+      return { label, input };
+    }
+
+    function renderPendingReaders(readers) {
+      const tbody = document.getElementById('pendingBody');
+      if (!readers.length) {
+        setMessageRow(tbody, 9, 'No pending reader applications.');
+        return;
+      }
+      tbody.replaceChildren();
+      readers.forEach(reader => {
+        const profile = readerProfile(reader);
+        const tr = document.createElement('tr');
+        appendCell(tr, reader.name || profile.display_name || 'Reader', 'clamp');
+        appendCell(tr, profile.email || '—', 'email-cell');
+        appendCell(tr, formatRate(reader.rate_cents), 'gold-cell');
+        appendCell(tr, formatList(reader.modalities), 'clamp');
+        appendCell(tr, reader.experience_summary || '—', 'clamp');
+        appendCell(tr, formatList(reader.specialties), 'clamp');
+        appendCell(tr, formatAgreement(reader.contractor_agreed));
+        appendCell(tr, formatDate(reader.applied_at), 'dim-cell');
+
+        const actions = document.createElement('td');
+        const wrap = document.createElement('div');
+        wrap.className = 'reader-actions';
+        const rate = rateInput(reader, 'Approve at $/min');
+        const buttons = document.createElement('div');
+        buttons.className = 'reader-buttons';
+        const approveBtn = document.createElement('button');
+        approveBtn.type = 'button';
+        approveBtn.className = 'btn-success';
+        approveBtn.textContent = 'Approve';
+        approveBtn.addEventListener('click', () => approveReader(reader, rate.input, approveBtn));
+        const denyBtn = document.createElement('button');
+        denyBtn.type = 'button';
+        denyBtn.className = 'btn-danger';
+        denyBtn.textContent = 'Deny';
+        denyBtn.addEventListener('click', () => denyReader(reader, denyBtn));
+        buttons.append(approveBtn, denyBtn);
+        wrap.append(rate.label, buttons);
+        actions.appendChild(wrap);
+        tr.appendChild(actions);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAllReaders(readers) {
+      const tbody = document.getElementById('readersBody');
+      if (!readers.length) {
+        setMessageRow(tbody, 9, 'No readers found.');
+        return;
+      }
+      tbody.replaceChildren();
+      readers.forEach(reader => {
+        const profile = readerProfile(reader);
+        const tr = document.createElement('tr');
+        appendCell(tr, reader.name || profile.display_name || 'Reader', 'clamp');
+        appendCell(tr, profile.email || '—', 'email-cell');
+        appendCell(tr, formatRate(reader.rate_cents), 'gold-cell');
+        appendBadge(tr, applicationStatus(reader));
+        appendBadge(tr, presenceBadge(reader.status));
+        appendCell(tr, formatAgreement(reader.contractor_agreed));
+        appendCell(tr, formatDate(reader.applied_at), 'dim-cell');
+        appendCell(tr, reader.denied ? (reader.denial_reason || '—') : '—', 'clamp');
+
+        const actions = document.createElement('td');
+        const wrap = document.createElement('div');
+        wrap.className = 'reader-actions';
+        const rate = rateInput(reader, 'New rate $/min');
+        const updateBtn = document.createElement('button');
+        updateBtn.type = 'button';
+        updateBtn.className = 'btn-primary';
+        updateBtn.style.padding = '6px 12px';
+        updateBtn.style.fontSize = '13px';
+        updateBtn.textContent = 'Update rate';
+        updateBtn.addEventListener('click', () => updateReaderRate(reader, rate.input, updateBtn));
+        wrap.append(rate.label, updateBtn);
+        actions.appendChild(wrap);
+        tr.appendChild(actions);
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadReaderAdmin() {
+      const pendingBody = document.getElementById('pendingBody');
+      const readersBody = document.getElementById('readersBody');
+      setMessageRow(pendingBody, 9, 'Loading pending applications...');
+      setMessageRow(readersBody, 9, 'Loading readers...');
+
+      const [pending, all] = await Promise.all([
+        apiRequest('/admin/readers/pending'),
+        apiRequest('/admin/readers')
+      ]);
+
+      if (!pending || !pending.ok) {
+        setMessageRow(pendingBody, 9, pending?.error || 'Failed to load pending applications. Check permissions.', true);
+      } else {
+        renderPendingReaders(pending.pendingReaders || []);
+      }
+
+      if (!all || !all.ok) {
+        setMessageRow(readersBody, 9, all?.error || 'Failed to load readers. Check permissions.', true);
+      } else {
+        renderAllReaders(all.readers || []);
+      }
+    }
+
+    async function approveReader(reader, input, button) {
+      const name = reader.name || readerProfile(reader).display_name || 'this reader';
+      const payload = { readerId: reader.id };
+      const raw = input ? input.value : '';
+      if (String(raw).trim() !== '') {
+        const cents = dollarsToCents(raw);
+        if (cents == null || Number.isNaN(cents) || cents < 100 || cents > 10000) {
+          showStatus('Approve rate must be between $1.00 and $100.00 per minute.', true);
+          return;
+        }
+        payload.rateCents = cents;
+      }
+      const rateNote = payload.rateCents ? formatRate(payload.rateCents) : 'their requested rate';
+      if (!confirm(`Approve ${name} at ${rateNote}?`)) return;
+      setRowBusy(button, true);
+      const res = await apiRequest('/admin/readers/approve', 'POST', payload);
+      if (res?.ok) {
+        showStatus(`${name} approved.`);
+        loadReaderAdmin();
+      } else {
+        setRowBusy(button, false);
+        showStatus(res?.error || 'Failed to approve reader', true);
+      }
+    }
+
+    async function denyReader(reader, button) {
+      const name = reader.name || readerProfile(reader).display_name || 'this reader';
+      const reason = prompt(`Optional reason for denying ${name}.\nLeave blank to use the platform default. Cancel to abort.`);
+      if (reason === null) return;
+      const payload = { readerId: reader.id };
+      const trimmed = reason.trim();
+      if (trimmed) payload.reason = trimmed;
+      setRowBusy(button, true);
+      const res = await apiRequest('/admin/readers/deny', 'POST', payload);
+      if (res?.ok) {
+        showStatus(`${name} denied.`);
+        loadReaderAdmin();
+      } else {
+        setRowBusy(button, false);
+        showStatus(res?.error || 'Failed to deny reader', true);
+      }
+    }
+
+    async function updateReaderRate(reader, input, button) {
+      const name = reader.name || readerProfile(reader).display_name || 'this reader';
+      const cents = dollarsToCents(input ? input.value : '');
+      if (cents == null || Number.isNaN(cents) || cents < 100 || cents > 10000) {
+        showStatus('Rate must be between $1.00 and $100.00 per minute.', true);
+        return;
+      }
+      if (!confirm(`Set ${name}'s rate to ${formatRate(cents)}?`)) return;
+      setRowBusy(button, true);
+      const res = await apiRequest('/admin/readers/rate', 'POST', { readerId: reader.id, rateCents: cents });
+      if (res?.ok) {
+        showStatus(`Rate updated for ${name}.`);
+        loadReaderAdmin();
+      } else {
+        setRowBusy(button, false);
+        showStatus(res?.error || 'Failed to update rate', true);
       }
     }
 
