@@ -367,35 +367,140 @@
 
     async function loadQueue() {
       const tbody = document.getElementById('queueBody');
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--dim); padding:24px;">Refreshing queue...</td></tr>';
+      tbody.innerHTML = '';
+      const loadingTr = document.createElement('tr');
+      const loadingTd = document.createElement('td');
+      loadingTd.colSpan = 9;
+      loadingTd.style.textAlign = 'center';
+      loadingTd.style.color = 'var(--dim)';
+      loadingTd.style.padding = '24px';
+      loadingTd.textContent = 'Refreshing queue...';
+      loadingTr.appendChild(loadingTd);
+      tbody.appendChild(loadingTr);
+
       const data = await apiRequest('/queue');
+      tbody.innerHTML = '';
+
       if (!data || !data.ok) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--danger); padding:24px;">${data?.error || 'Failed to load queue. Check permissions.'}</td></tr>`;
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 9;
+        td.style.textAlign = 'center';
+        td.style.color = 'var(--danger)';
+        td.style.padding = '24px';
+        td.textContent = data?.error || 'Failed to load queue. Check permissions.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
         return;
       }
       if (!data.queue || data.queue.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--dim); padding:24px;">No earnings currently awaiting approval.</td></tr>';
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 9;
+        td.style.textAlign = 'center';
+        td.style.color = 'var(--dim)';
+        td.style.padding = '24px';
+        td.textContent = 'No earnings currently awaiting approval.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
         return;
       }
 
-      tbody.innerHTML = data.queue.map(item => `
-        <tr>
-          <td><input type="checkbox" class="queue-check" value="${item.id}"></td>
-          <td><strong>${item.profiles?.display_name || 'Reader'}</strong><br><span style="font-size:12px; color:var(--dim);">${item.profiles?.email || item.reader_user_id}</span></td>
-          <td style="font-size:12px;">${item.session_id ? item.session_id.substring(0,8) + '...' : 'N/A'}<br>${item.sessions?.billed_minutes || 0} min @ $${((item.sessions?.rate_cents||0)/100).toFixed(2)}</td>
-          <td><span class="badge ${item.status === 'disputed' ? 'badge-disputed' : 'badge-approved'}">${item.status}</span></td>
-          <td>$${(Number(item.gross_cents)/100).toFixed(2)}</td>
-          <td style="color:var(--gold); font-weight:bold;">$${(Number(item.reader_share_cents)/100).toFixed(2)}</td>
-          <td style="font-size:12px; color:var(--dim);">${new Date(item.created_at).toLocaleDateString()}</td>
-          <td style="font-size:12px; color:var(--dim); max-width:180px;">${item.dispute_note || '—'}</td>
-          <td>
-            <div style="display:flex; gap:6px;">
-              <button class="btn-success" onclick="approveOne(${item.id})">Approve</button>
-              <button class="btn-danger" onclick="rejectOne(${item.id})">Reject</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      data.queue.forEach(item => {
+        const tr = document.createElement('tr');
+
+        // Checkbox
+        const tdCheck = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'queue-check';
+        cb.value = String(item.id);
+        tdCheck.appendChild(cb);
+        tr.appendChild(tdCheck);
+
+        // Reader info
+        const tdReader = document.createElement('td');
+        const strong = document.createElement('strong');
+        strong.textContent = item.profiles?.display_name || 'Reader';
+        const br = document.createElement('br');
+        const span = document.createElement('span');
+        span.style.fontSize = '12px';
+        span.style.color = 'var(--dim)';
+        span.textContent = item.profiles?.email || item.reader_user_id || '';
+        tdReader.appendChild(strong);
+        tdReader.appendChild(br);
+        tdReader.appendChild(span);
+        tr.appendChild(tdReader);
+
+        // Session info
+        const tdSession = document.createElement('td');
+        tdSession.style.fontSize = '12px';
+        tdSession.style.whiteSpace = 'pre-line';
+        const sessId = item.session_id ? item.session_id.substring(0, 8) + '...' : 'N/A';
+        const billedMin = item.sessions?.billed_minutes || 0;
+        const rateStr = ((item.sessions?.rate_cents || 0) / 100).toFixed(2);
+        tdSession.textContent = `${sessId}\n${billedMin} min @ $${rateStr}`;
+        tr.appendChild(tdSession);
+
+        // Status badge
+        const tdStatus = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = `badge ${item.status === 'disputed' ? 'badge-disputed' : 'badge-approved'}`;
+        badge.textContent = item.status;
+        tdStatus.appendChild(badge);
+        tr.appendChild(tdStatus);
+
+        // Gross
+        const tdGross = document.createElement('td');
+        tdGross.textContent = `$${(Number(item.gross_cents) / 100).toFixed(2)}`;
+        tr.appendChild(tdGross);
+
+        // Share
+        const tdShare = document.createElement('td');
+        tdShare.style.color = 'var(--gold)';
+        tdShare.style.fontWeight = 'bold';
+        tdShare.textContent = `$${(Number(item.reader_share_cents) / 100).toFixed(2)}`;
+        tr.appendChild(tdShare);
+
+        // Date
+        const tdDate = document.createElement('td');
+        tdDate.style.fontSize = '12px';
+        tdDate.style.color = 'var(--dim)';
+        tdDate.textContent = item.created_at ? new Date(item.created_at).toLocaleDateString() : '—';
+        tr.appendChild(tdDate);
+
+        // Dispute note (safe textContent, never innerHTML)
+        const tdDispute = document.createElement('td');
+        tdDispute.style.fontSize = '12px';
+        tdDispute.style.color = 'var(--dim)';
+        tdDispute.style.maxWidth = '180px';
+        tdDispute.style.wordBreak = 'break-word';
+        tdDispute.textContent = item.dispute_note || '—';
+        tr.appendChild(tdDispute);
+
+        // Actions
+        const tdActions = document.createElement('td');
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.gap = '6px';
+
+        const btnApprove = document.createElement('button');
+        btnApprove.className = 'btn-success';
+        btnApprove.textContent = 'Approve';
+        btnApprove.addEventListener('click', () => approveOne(item.id));
+
+        const btnReject = document.createElement('button');
+        btnReject.className = 'btn-danger';
+        btnReject.textContent = 'Reject';
+        btnReject.addEventListener('click', () => rejectOne(item.id));
+
+        div.appendChild(btnApprove);
+        div.appendChild(btnReject);
+        tdActions.appendChild(div);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
     }
 
     async function approveOne(id) {
@@ -447,35 +552,121 @@
       const data = await apiRequest('/history');
       if (!data || !data.ok) return;
 
-      historyBody.innerHTML = (!data.payouts || data.payouts.length === 0)
-        ? '<tr><td colspan="9" style="text-align:center; color:var(--dim); padding:24px;">No payout requests recorded.</td></tr>'
-        : data.payouts.map(p => `
-          <tr>
-            <td>#${p.id}</td>
-            <td>${p.profiles?.display_name || p.profiles?.email || p.reader_user_id}</td>
-            <td style="color:var(--gold); font-weight:bold;">$${(Number(p.amount_cents)/100).toFixed(2)}</td>
-            <td style="text-transform:uppercase; font-size:12px;">${p.method}</td>
-            <td>$${(Number(p.fee_cents)/100).toFixed(2)}</td>
-            <td><span class="badge ${p.status === 'paid' ? 'badge-paid' : (p.status === 'failed' ? 'badge-failed' : 'badge-approved')}">${p.status}</span></td>
-            <td style="font-size:12px; color:var(--dim);">${p.stripe_transfer_id || '—'}</td>
-            <td style="font-size:12px; color:var(--dim);">${p.stripe_payout_id || '—'}</td>
-            <td style="font-size:12px; color:var(--dim);">${new Date(p.created_at).toLocaleString()}</td>
-          </tr>
-        `).join('');
+      historyBody.innerHTML = '';
+      if (!data.payouts || data.payouts.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 9;
+        td.style.textAlign = 'center';
+        td.style.color = 'var(--dim)';
+        td.style.padding = '24px';
+        td.textContent = 'No payout requests recorded.';
+        tr.appendChild(td);
+        historyBody.appendChild(tr);
+      } else {
+        data.payouts.forEach(p => {
+          const tr = document.createElement('tr');
 
-      auditBody.innerHTML = (!data.audit || data.audit.length === 0)
-        ? '<tr><td colspan="4" style="text-align:center; color:var(--dim); padding:24px;">No audit log entries.</td></tr>'
-        : data.audit.map(a => `
-          <tr>
-            <td style="font-size:12px; color:var(--dim);">${new Date(a.created_at).toLocaleString()}</td>
-            <td style="font-weight:bold; color:var(--gold);">${a.action}</td>
-            <td>${a.target_id}</td>
-            <td style="font-size:12px;"><pre style="margin:0; font-family:monospace;">${JSON.stringify(a.details)}</pre></td>
-          </tr>
-        `).join('');
+          const tdId = document.createElement('td');
+          tdId.textContent = `#${p.id}`;
+          tr.appendChild(tdId);
+
+          const tdReader = document.createElement('td');
+          tdReader.textContent = p.profiles?.display_name || p.profiles?.email || p.reader_user_id || '—';
+          tr.appendChild(tdReader);
+
+          const tdAmount = document.createElement('td');
+          tdAmount.style.color = 'var(--gold)';
+          tdAmount.style.fontWeight = 'bold';
+          tdAmount.textContent = `$${(Number(p.amount_cents) / 100).toFixed(2)}`;
+          tr.appendChild(tdAmount);
+
+          const tdMethod = document.createElement('td');
+          tdMethod.style.textTransform = 'uppercase';
+          tdMethod.style.fontSize = '12px';
+          tdMethod.textContent = p.method;
+          tr.appendChild(tdMethod);
+
+          const tdFee = document.createElement('td');
+          tdFee.textContent = `$${(Number(p.fee_cents) / 100).toFixed(2)}`;
+          tr.appendChild(tdFee);
+
+          const tdStatus = document.createElement('td');
+          const badge = document.createElement('span');
+          badge.className = `badge ${p.status === 'paid' ? 'badge-paid' : (p.status === 'failed' ? 'badge-failed' : 'badge-approved')}`;
+          badge.textContent = p.status;
+          tdStatus.appendChild(badge);
+          tr.appendChild(tdStatus);
+
+          const tdTransfer = document.createElement('td');
+          tdTransfer.style.fontSize = '12px';
+          tdTransfer.style.color = 'var(--dim)';
+          tdTransfer.textContent = p.stripe_transfer_id || '—';
+          tr.appendChild(tdTransfer);
+
+          const tdPayout = document.createElement('td');
+          tdPayout.style.fontSize = '12px';
+          tdPayout.style.color = 'var(--dim)';
+          tdPayout.textContent = p.stripe_payout_id || '—';
+          tr.appendChild(tdPayout);
+
+          const tdDate = document.createElement('td');
+          tdDate.style.fontSize = '12px';
+          tdDate.style.color = 'var(--dim)';
+          tdDate.textContent = p.created_at ? new Date(p.created_at).toLocaleString() : '—';
+          tr.appendChild(tdDate);
+
+          historyBody.appendChild(tr);
+        });
+      }
+
+      auditBody.innerHTML = '';
+      if (!data.audit || data.audit.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 4;
+        td.style.textAlign = 'center';
+        td.style.color = 'var(--dim)';
+        td.style.padding = '24px';
+        td.textContent = 'No audit log entries.';
+        tr.appendChild(td);
+        auditBody.appendChild(tr);
+      } else {
+        data.audit.forEach(a => {
+          const tr = document.createElement('tr');
+
+          const tdDate = document.createElement('td');
+          tdDate.style.fontSize = '12px';
+          tdDate.style.color = 'var(--dim)';
+          tdDate.textContent = a.created_at ? new Date(a.created_at).toLocaleString() : '—';
+          tr.appendChild(tdDate);
+
+          const tdAction = document.createElement('td');
+          tdAction.style.fontWeight = 'bold';
+          tdAction.style.color = 'var(--gold)';
+          tdAction.textContent = a.action;
+          tr.appendChild(tdAction);
+
+          const tdTarget = document.createElement('td');
+          tdTarget.textContent = a.target_id || '—';
+          tr.appendChild(tdTarget);
+
+          const tdDetails = document.createElement('td');
+          tdDetails.style.fontSize = '12px';
+          const pre = document.createElement('pre');
+          pre.style.margin = '0';
+          pre.style.fontFamily = 'monospace';
+          pre.textContent = JSON.stringify(a.details);
+          tdDetails.appendChild(pre);
+          tr.appendChild(tdDetails);
+
+          auditBody.appendChild(tr);
+        });
+      }
     }
 
     init();
   </script>
 </body>
 </html>
+
